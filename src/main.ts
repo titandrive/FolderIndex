@@ -342,7 +342,7 @@ class QuickerFoldersSettingTab extends PluginSettingTab {
 			.setDesc("View source code, report issues, or contribute")
 			.addButton((button) =>
 				button.setButtonText("GitHub").onClick(() => {
-					window.open("https://github.com/titandrive/FolderIndex");
+					window.open("https://github.com/titandrive/Obsidian-QuickerFolders");
 				})
 			);
 
