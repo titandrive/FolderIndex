@@ -1,4 +1,4 @@
-import { Plugin, PluginSettingTab, Setting, TFile, TFolder, App } from "obsidian";
+import { Plugin, PluginSettingTab, Setting, TFile, TFolder, App, Notice } from "obsidian";
 
 type Fallback = "recent" | "alphabetical" | "none";
 type EmptyFolderBehavior = "recent_recursive" | "recent_index" | "none";
@@ -296,18 +296,23 @@ class QuickerFoldersSettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl)
+		const keywordSetting = new Setting(containerEl)
 			.setName("Keyword")
-			.setDesc("The keyword to match when looking for index notes")
+			.setDesc("The keyword to match when looking for index notes (minimum 3 characters)")
 			.addText((text) =>
 				text
 					.setPlaceholder("index")
 					.setValue(this.plugin.settings.keyword)
 					.onChange(async (value) => {
 						const trimmed = value.trim().toLowerCase();
-						if (trimmed.length < 3) return;
+						if (trimmed.length < 3) {
+							keywordSetting.setDesc("⚠️ Keyword must be at least 3 characters");
+							return;
+						}
+						keywordSetting.setDesc("The keyword to match when looking for index notes (minimum 3 characters)");
 						this.plugin.settings.keyword = trimmed;
 						await this.plugin.saveSettings();
+						new Notice(`Keyword set to "${trimmed}"`);
 					})
 			);
 
