@@ -17,16 +17,58 @@ const DEFAULT_SETTINGS: FolderIndexSettings = {
 export default class FolderIndexPlugin extends Plugin {
 	settings: FolderIndexSettings = DEFAULT_SETTINGS;
 	private clickHandler: ((evt: MouseEvent) => void) | null = null;
-	private mousedownHandler: ((evt: MouseEvent) => void) | null = null;
+	private preventToggleHandler: ((evt: Event) => void) | null = null;
+	private blockToggle = false;
+	private unpatchFn: (() => void) | null = null;
 
 	async onload() {
 		await this.loadSettings();
 		this.addSettingTab(new FolderIndexSettingTab(this.app, this));
 		this.registerFolderClickHandler();
+		this.patchFileExplorer();
 	}
 
 	onunload() {
 		this.removeFolderClickHandler();
+		if (this.unpatchFn) {
+			this.unpatchFn();
+			this.unpatchFn = null;
+		}
+	}
+
+	private patchFileExplorer() {
+		const plugin = this;
+
+		const doPatch = () => {
+			const leaves = this.app.workspace.getLeavesOfType("file-explorer");
+			if (leaves.length === 0) return;
+
+			const view = leaves[0].view as any;
+			if (!view?.fileItems) return;
+
+			let folderProto: any = null;
+			for (const path in view.fileItems) {
+				const item = view.fileItems[path];
+				if (item.file instanceof TFolder) {
+					folderProto = Object.getPrototypeOf(item);
+					break;
+				}
+			}
+
+			if (!folderProto?.setCollapsed) return;
+
+			const original = folderProto.setCollapsed;
+			folderProto.setCollapsed = function (collapsed: boolean) {
+				if (plugin.blockToggle) return;
+				return original.call(this, collapsed);
+			};
+
+			plugin.unpatchFn = () => {
+				folderProto.setCollapsed = original;
+			};
+		};
+
+		this.app.workspace.onLayoutReady(doPatch);
 	}
 
 	private registerFolderClickHandler() {
@@ -55,10 +97,11 @@ export default class FolderIndexPlugin extends Plugin {
 			if (!this.settings.allowFolderToggle && !clickedArrow) {
 				evt.stopImmediatePropagation();
 				evt.preventDefault();
+				setTimeout(() => { this.blockToggle = false; }, 100);
 			}
 		};
 
-		this.mousedownHandler = (evt: MouseEvent) => {
+		this.preventToggleHandler = (evt: Event) => {
 			if (this.settings.allowFolderToggle) return;
 
 			const target = evt.target as HTMLElement;
@@ -70,22 +113,27 @@ export default class FolderIndexPlugin extends Plugin {
 			);
 			if (clickedArrow) return;
 
+			this.blockToggle = true;
 			evt.stopImmediatePropagation();
 			evt.preventDefault();
 		};
 
-		document.addEventListener("click", this.clickHandler, true);
-		document.addEventListener("mousedown", this.mousedownHandler, true);
+		window.addEventListener("click", this.clickHandler, true);
+		for (const evt of ["mousedown", "mouseup", "pointerdown", "pointerup"]) {
+			window.addEventListener(evt, this.preventToggleHandler, true);
+		}
 	}
 
 	private removeFolderClickHandler() {
 		if (this.clickHandler) {
-			document.removeEventListener("click", this.clickHandler, true);
+			window.removeEventListener("click", this.clickHandler, true);
 			this.clickHandler = null;
 		}
-		if (this.mousedownHandler) {
-			document.removeEventListener("mousedown", this.mousedownHandler, true);
-			this.mousedownHandler = null;
+		if (this.preventToggleHandler) {
+			for (const evt of ["mousedown", "mouseup", "pointerdown", "pointerup"]) {
+				window.removeEventListener(evt, this.preventToggleHandler, true);
+			}
+			this.preventToggleHandler = null;
 		}
 	}
 
