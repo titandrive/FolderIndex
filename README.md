@@ -43,7 +43,12 @@ Quicker Folders is quite straightforward and works without any configuration. Th
   - *Most recent:* The most recently edited note (default)
   - *Topmost:* The first note alphabetically
   - *Nothing:* Do nothing
-- **Strict Matching:** Whether it will open any note containing "index" in the title, or whether it will only open notes named exactly `index.md`. (Default: off)
+- **Nested folder behavior:** (What to open when a folder contains only subfolders and no notes)
+  - *Recently edited index:* Most recently edited index note contained in subfolders (default)
+  - *Recently edited note:* Most recently edited note contained in subolders
+  - *Nothing:* Do nothing
+- **Keyword:** Allows you to change the keyword from `index` to anything of your choosing. 3 character minimum. 
+- **Strict matching:** Whether it will open any note containing "index" in the title, or whether it will only open notes named exactly `index.md`. (Default: off)
 - **Allow folder toggle:** Whether clicking a folder name expands/collapses it. When disabled, you can still collapse a folder by clicking the arrow. (Default: on)
 
 ## AI Disclosure
