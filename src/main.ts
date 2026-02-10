@@ -17,6 +17,7 @@ const DEFAULT_SETTINGS: FolderIndexSettings = {
 export default class FolderIndexPlugin extends Plugin {
 	settings: FolderIndexSettings = DEFAULT_SETTINGS;
 	private clickHandler: ((evt: MouseEvent) => void) | null = null;
+	private mousedownHandler: ((evt: MouseEvent) => void) | null = null;
 
 	async onload() {
 		await this.loadSettings();
@@ -57,14 +58,34 @@ export default class FolderIndexPlugin extends Plugin {
 			}
 		};
 
-		// Use capture phase so we fire alongside the native expand, not instead of it
+		this.mousedownHandler = (evt: MouseEvent) => {
+			if (this.settings.allowFolderToggle) return;
+
+			const target = evt.target as HTMLElement;
+			const folderTitle = target.closest(".nav-folder-title");
+			if (!folderTitle) return;
+
+			const clickedArrow = target.closest(
+				".nav-folder-collapse-indicator, .collapse-icon, .tree-item-icon"
+			);
+			if (clickedArrow) return;
+
+			evt.stopImmediatePropagation();
+			evt.preventDefault();
+		};
+
 		document.addEventListener("click", this.clickHandler, true);
+		document.addEventListener("mousedown", this.mousedownHandler, true);
 	}
 
 	private removeFolderClickHandler() {
 		if (this.clickHandler) {
 			document.removeEventListener("click", this.clickHandler, true);
 			this.clickHandler = null;
+		}
+		if (this.mousedownHandler) {
+			document.removeEventListener("mousedown", this.mousedownHandler, true);
+			this.mousedownHandler = null;
 		}
 	}
 
