@@ -32,3 +32,9 @@ BRAT will now automatically keep track of updates for you
 1. Browse to FolderIndex [Releases](https://github.com/titandrive/obsidian-folderindex/releases)
 2. Download the latest release
 3. Extract the release and copy it to your obsidian vault: `.../MyVault/.obsidian/plugins/FolderIndex`
+
+## AI Disclosure
+This plugin was made with the assistance of Claude Code. 
+
+## License
+MIT
