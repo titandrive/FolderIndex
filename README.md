@@ -23,12 +23,12 @@ Using BRAT is the recommended, and easiest, way to install custom Obsidian plugi
 
 1. Install BRAT via community plugins. 
 2. Open BRAT and select "Add Beta Plugin"
-3. Paste `https://github.com/titandrive/folderindex` into the text bar
+3. Paste `https://github.com/titandrive/obsidian-folderindex` into the text bar
 4. Click "Add Plugin"
 
 BRAT will now automatically keep track of updates for you
 
 ### Manual Installation
-1. Browse to FolderIndex [Releases](https://github.com/titandrive/folderindex/releases)
+1. Browse to FolderIndex [Releases](https://github.com/titandrive/obsidian-folderindex/releases)
 2. Download the latest release
 3. Extract the release and copy it to your obsidian vault: `.../MyVault/.obsidian/plugins/FolderIndex`
