@@ -41,7 +41,7 @@ Quicker Folders is quite straightforward and works without any configuration. Th
 
 - **Fallback behavior** (What to open when a folder has no `index.md`)
   - *Most recent:* The most recently edited note (default)
-  - *Topmost:* The first note alphabetically
+  - *Alphabetical:* The first note (alphabetically)
   - *Nothing:* Do nothing
 - **Nested folder behavior:** (What to open when a folder contains only subfolders and no notes)
   - *Recently edited index:* Most recently edited index note contained in subfolders (default)

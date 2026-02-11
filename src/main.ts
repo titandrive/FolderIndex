@@ -148,11 +148,29 @@ export default class QuickerFoldersPlugin extends Plugin {
 
 		const directFiles = this.getMarkdownFiles(folder);
 		if (directFiles.length === 0) {
+			let result: TFile | null = null;
 			switch (this.settings.emptyFolderBehavior) {
 				case "recent_recursive":
-					return this.getMostRecentRecursive(folder);
+					result = this.getMostRecentRecursive(folder);
+					break;
 				case "recent_index":
-					return this.getMostRecentSubfolderIndex(folder);
+					result = this.getMostRecentSubfolderIndex(folder);
+					break;
+				case "none":
+					return null;
+			}
+			if (result) return result;
+
+			// Fallback uses recursive search since folder has no direct notes
+			const recursiveFiles = this.getMarkdownFilesRecursive(folder);
+			if (recursiveFiles.length === 0) return null;
+			switch (this.settings.fallback) {
+				case "alphabetical":
+					recursiveFiles.sort((a, b) => a.name.localeCompare(b.name));
+					return recursiveFiles[0];
+				case "recent":
+					recursiveFiles.sort((a, b) => b.stat.mtime - a.stat.mtime);
+					return recursiveFiles[0];
 				case "none":
 					return null;
 			}
@@ -272,7 +290,7 @@ class QuickerFoldersSettingTab extends PluginSettingTab {
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption("recent", "Recently edited")
-					.addOption("alphabetical", "Topmost")
+					.addOption("alphabetical", "Alphabetical")
 					.addOption("none", "Nothing")
 					.setValue(this.plugin.settings.fallback)
 					.onChange(async (value) => {
@@ -296,23 +314,36 @@ class QuickerFoldersSettingTab extends PluginSettingTab {
 					})
 			);
 
-		const keywordSetting = new Setting(containerEl)
+		let pendingKeyword = this.plugin.settings.keyword;
+		new Setting(containerEl)
 			.setName("Keyword")
 			.setDesc("The keyword to match when looking for index notes (minimum 3 characters)")
 			.addText((text) =>
 				text
 					.setPlaceholder("index")
 					.setValue(this.plugin.settings.keyword)
-					.onChange(async (value) => {
-						const trimmed = value.trim().toLowerCase();
-						if (trimmed.length < 3) {
-							keywordSetting.setDesc("⚠️ Keyword must be at least 3 characters");
+					.onChange((value) => {
+						pendingKeyword = value.trim().toLowerCase();
+					})
+			)
+			.addButton((button) =>
+				button
+					.setButtonText("Save")
+					.setCta()
+					.onClick(async () => {
+						if (pendingKeyword.length < 3) {
+							new Notice("Keyword must be at least 3 characters");
 							return;
 						}
-						keywordSetting.setDesc("The keyword to match when looking for index notes (minimum 3 characters)");
-						this.plugin.settings.keyword = trimmed;
+						this.plugin.settings.keyword = pendingKeyword;
 						await this.plugin.saveSettings();
-						new Notice(`Keyword set to "${trimmed}"`);
+						button.setButtonText("Saved!");
+						button.removeCta();
+						new Notice(`Keyword set to "${pendingKeyword}"`);
+						setTimeout(() => {
+							button.setButtonText("Save");
+							button.setCta();
+						}, 1500);
 					})
 			);
 
